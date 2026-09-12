@@ -4,21 +4,88 @@ let peaks;
 let planets = [];
 let planet;
 
+let myPlanet
+
 async function setup() {
     createCanvas(1600, 800);
     // noLoop();
 
     let origin = createVector(width / 2, height / 2)
-    planet = mkPlanet(origin, 200, 360);
-    planet = staticRoughPlanet(planet);
+
+    planets[0] = mkPlanet(createVector(width / 2, 0), 200, 410);
+    planets[0] = staticRoughPlanet(planets[0]);
+
+    planets[1] = mkPlanet(createVector(width / 2, height), 200, 410);
+    planets[1] = staticRoughPlanet(planets[1]);
+
+    myPlanet = new Planet(createVector(width / 2, height), 200, 410);
 }
 
 function draw() {
     frameRate(24);
     background(220);
 
-    // planet = wavyPlanet(planet);
-    drawPlanet(planet);
+    myPlanet.generateRoughness()
+    myPlanet.draw()
+
+    // planets[0] = wavyPlanet(planets[0], 1 / 2);
+    // planets[0] = movePlanet(planets[0])
+    // drawPlanet(planets[0]);
+
+    // planets[1] = wavyPlanet(planets[1], 1 / 2);
+    // planets[1] = movePlanet(planets[1])
+    // drawPlanet(planets[1]);
+
+}
+
+class Planet {
+    constructor(origin, radius, numPoints) {
+        this.origin = origin
+        this.radius = radius
+        this.numPoints = numPoints
+        this.phase
+
+        this.points = []
+        let point = {}
+
+        for (let i = 0; i < this.numPoints; i++) {
+            let vector = createVector(this.origin.x, this.origin.y);
+            vector = vector.setMag(this.radius);
+            vector = vector.setHeading(i * (TWO_PI / this.numPoints));
+
+            point = { vector: vector, newVector: vector }
+            this.points[i] = point;
+        }
+    }
+
+    generateRoughness() {
+        for (let i = 0; i < this.numPoints; i++) {
+            this.points[i].roughness = noise(i)
+        }
+    }
+
+    draw() {
+        // Apply parameters
+        for (let point of this.points) {
+            let mag = point.vector.mag()
+            let newMag =
+                newVector = p5.vector.setMag(this.point)
+        }
+
+        beginShape();
+        for (let point of this.points) {
+            let x = point.newVector.x + this.origin.x
+            let y = point.newVector.y + this.origin.y
+            splineProperty('tightness', 0.1)
+            splineVertex(x, y)
+
+            // reset newVector to original vector
+            point.newVector = point.vector.copy()
+        }
+        endShape(CLOSE);
+
+        this.phase += mouseX / width
+    }
 }
 
 function mkPlanet(origin, radius, numPoints) {
