@@ -2,7 +2,7 @@ const density = " .:-=+*#%@";
 const charSize = 12;
 let cols, rows;
 let time = 0; // Used to animate the math
-let gridCoords = new Set();
+let gridCoords = [];
 let griddedMouseX;
 let griddedMouseY;
 let asciiPixels = [];
@@ -37,9 +37,13 @@ function draw() {
     asciiPixels[drawIndex].flicker()
   }
 
-  let gridCoords = calculateCircle(32, 32, 12);
-
-  time += 0.05; // Advance time to animate the waves
+  let gridCoords = calculateCircle(griddedMouseX, griddedMouseY, 12);
+  for (let i = 0; i < (gridCoords.length / 2); i++) {
+    let brushIndex = grid2index(gridCoords[i], gridCoords[i + 1], cols)
+    if (brushIndex >= 0) {
+      asciiPixels[brushIndex].flicker()
+    }
+  }
 
   for (pixel of asciiPixels) {
     pixel.update()
@@ -109,7 +113,11 @@ class AsciiPixel {
   }
 }
 
-function grid2index(x, y, cols) { return (y * cols) + x }
+function grid2index(x, y, cols) {
+  if (x > cols) { return -1 }
+  if (y > rows) { return -1 }
+  return (y * cols) + x
+}
 function index2grid(index, cols) {
   let remainder = index % cols;
   let ratio = (index - remainder) / cols;
@@ -117,12 +125,20 @@ function index2grid(index, cols) {
     x: remainder,
     y: ratio
   }
+  if (grid.x > cols) {
+    grid.x = -1
+    grid.y = -1
+    return grid
+  }
+  if (grid.y > rows) {
+    return
+  }
   return grid;
 }
 
 // Bresenham's Midpoint Circle Algorithm
 function calculateCircle(cx, cy, r) {
-  let gridCoords = new Set();
+  let coords = [];
 
   let x = 0;
   let y = r;
@@ -130,7 +146,7 @@ function calculateCircle(cx, cy, r) {
   // The decision parameter determines whether to step diagonally or straight
   let decision = 3 - 2 * r;
 
-  addSymmetry(cx, cy, x, y);
+  addSymmetry(coords, cx, cy, x, y);
 
   // Loop until the octant crosses the 45-degree line (when x becomes > y)
   while (y >= x) {
@@ -143,22 +159,24 @@ function calculateCircle(cx, cy, r) {
       decision = decision + 4 * x + 6;
     }
 
-    addSymmetry(cx, cy, x, y);
+    addSymmetry(coords, cx, cy, x, y);
   }
 
-  return gridCoords;
+  return coords;
 }
 
 // Takes a single calculated point and mirrors it to all 8 octants
-function addSymmetry(cx, cy, x, y) {
-  gridCoords.add(`${cx + x},${cy + y}`);
-  gridCoords.add(`${cx - x},${cy + y}`);
-  gridCoords.add(`${cx + x},${cy - y}`);
-  gridCoords.add(`${cx - x},${cy - y}`);
-  gridCoords.add(`${cx + y},${cy + x}`);
-  gridCoords.add(`${cx - y},${cy + x}`);
-  gridCoords.add(`${cx + y},${cy - x}`);
-  gridCoords.add(`${cx - y},${cy - x}`);
+function addSymmetry(coords, cx, cy, x, y) {
+  coords.push(
+    cx + x, cy + y,
+    cx - x, cy + y,
+    cx + x, cy - y,
+    cx - x, cy - y,
+    cx + y, cy + x,
+    cx - y, cy + x,
+    cx + y, cy - x,
+    cx - y, cy - x
+  );
 }
 
 // working in a system of grids, not pixels
