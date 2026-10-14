@@ -5,18 +5,24 @@ let time = 0; // Used to animate the math
 let gridCoords = new Set();
 let griddedMouseX;
 let griddedMouseY;
+let asciiPixels = [];
 
 function setup() {
   createCanvas(600, 900);
   textFont('monospace');
   textSize(charSize);
   textAlign(CENTER, CENTER);
+  frameRate(8)
 
   cols = floor(width / charSize);
   rows = floor(height / charSize);
 
-
-  // We leave looping ON for this one to see the animation
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      let index = grid2index(x, y, cols)
+      asciiPixels[index] = new AsciiPixel(x, y, charSize)
+    }
+  }
 }
 
 function draw() {
@@ -25,33 +31,62 @@ function draw() {
 
   let griddedMouseX = round(mouseX / width * cols)
   let griddedMouseY = round(mouseY / height * rows)
+  let index = grid2index(griddedMouseX, griddedMouseY, cols)
+  testGrid = index2grid(index, cols)
+
+  // console.log("state, cols: ", cols)
+  // console.log("input, x: ", griddedMouseX, " y: ", griddedMouseY)
+  // console.log("index: ", index)
+  // console.log("output, x: ", testGrid.x, " y: ", testGrid.y)
+  // console.log("-----------------------------------------------")
   // console.log(mouseX / width)
-  console.log(griddedMouseX)
-
-  text("x", griddedMouseX * charSize + charSize / 2, griddedMouseY * charSize + charSize / 2);
-
-  // for (let y = 0; y < rows; y++) {
-  //   for (let x = 0; x < cols; x++) {
-
-  //     let densityIndex = 1;
-  //     // if (y = griddedMouseY) {
-  //     //   if (x = griddedMouseX) {
-  //     //     densityIndex = 0.99;
-  //     //   }
-  //     // }
-
-  //     // combined is between -1 and 1. Map it to our density string index (0 to 9)
-  //     let charIndex = floor(map(densityIndex, 0, 1, 0, density.length - 1));
-
-  //     let charToDraw = density.charAt(charIndex);
-
-  //     text(charToDraw, x * charSize + charSize / 2, y * charSize + charSize / 2);
-  //   }
-  // }
+  // console.log(griddedMouseX)
+  drawIndex = grid2index(griddedMouseX, griddedMouseY, cols)
+  asciiPixels[drawIndex].setChar(">")
+  asciiPixels[drawIndex].draw()
+  // text("x", griddedMouseX * charSize + charSize / 2, griddedMouseY * charSize + charSize / 2);
 
   let gridCoords = calculateCircle(32, 32, 12);
 
   time += 0.05; // Advance time to animate the waves
+
+  for (pixel of asciiPixels) {
+    pixel.draw()
+  }
+}
+
+class AsciiPixel {
+  constructor(x, y, size) {
+    this.x = x
+    this.y = y
+    this.size = size
+
+    this.char = ""
+  }
+  setChar(char) {
+    this.char = char;
+  }
+  draw() {
+    if (char != "") {
+      text(
+        this.char,
+        this.x * this.size + this.size / 2,
+        this.y * this.size + this.size / 2
+      )
+    }
+  }
+
+}
+
+function grid2index(x, y, cols) { return (y * cols) + x }
+function index2grid(index, cols) {
+  let remainder = index % cols;
+  let ratio = (index - remainder) / cols;
+  let grid = {
+    x: remainder,
+    y: ratio
+  }
+  return grid;
 }
 
 // Bresenham's Midpoint Circle Algorithm
