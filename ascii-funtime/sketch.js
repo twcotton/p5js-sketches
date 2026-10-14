@@ -12,7 +12,7 @@ function setup() {
   textFont('monospace');
   textSize(charSize);
   textAlign(CENTER, CENTER);
-  frameRate(8)
+  frameRate(30)
 
   cols = floor(width / charSize);
   rows = floor(height / charSize);
@@ -31,26 +31,18 @@ function draw() {
 
   let griddedMouseX = round(mouseX / width * cols)
   let griddedMouseY = round(mouseY / height * rows)
-  let index = grid2index(griddedMouseX, griddedMouseY, cols)
-  testGrid = index2grid(index, cols)
 
-  // console.log("state, cols: ", cols)
-  // console.log("input, x: ", griddedMouseX, " y: ", griddedMouseY)
-  // console.log("index: ", index)
-  // console.log("output, x: ", testGrid.x, " y: ", testGrid.y)
-  // console.log("-----------------------------------------------")
-  // console.log(mouseX / width)
-  // console.log(griddedMouseX)
   drawIndex = grid2index(griddedMouseX, griddedMouseY, cols)
-  asciiPixels[drawIndex].setChar(">")
-  asciiPixels[drawIndex].draw()
-  // text("x", griddedMouseX * charSize + charSize / 2, griddedMouseY * charSize + charSize / 2);
+  if (drawIndex < cols * rows) {
+    asciiPixels[drawIndex].flicker()
+  }
 
   let gridCoords = calculateCircle(32, 32, 12);
 
   time += 0.05; // Advance time to animate the waves
 
   for (pixel of asciiPixels) {
+    pixel.update()
     pixel.draw()
   }
 }
@@ -61,21 +53,60 @@ class AsciiPixel {
     this.y = y
     this.size = size
 
-    this.char = ""
+    this.targetChar = " " // when unaffected, setter
+    this.char = " " // char to modify in the class
+
+    this.changing = 0;
+    this.flickering = false;
+    this.flickerIndex = -1;
+    this.flickerString = " .:-=+*#%@#%*+=-:. "
   }
+  // public
   setChar(char) {
-    this.char = char;
+    this.targetChar = char;
+  }
+  flicker() {
+    if (!this.flickering) {
+      this.flickerIndex = 0
+      this.flickering = true
+    }
+    // this.startChanging()
+  }
+  update() {
+    if (this.flickering) { this.flickerUpdate() }
   }
   draw() {
-    if (char != "") {
+    if (char != " ") {
       text(
         this.char,
+        // this.flickerIndex,
         this.x * this.size + this.size / 2,
         this.y * this.size + this.size / 2
       )
     }
   }
 
+  // private
+  flickerUpdate() {
+    if (this.flickerIndex > this.flickerString.length) {
+      this.flickerIndex = 0
+      this.flickering = false
+      // this.stopChanging()
+
+      this.char = this.targetChar
+    }
+
+    this.char = this.flickerString.charAt(this.flickerIndex)
+
+    this.flickerIndex++
+  }
+
+  startChanging() { this.changing += 1 }
+
+  stopChanging() {
+    this.changing -= 1
+    if (this.changing < 0) { this.changing = 0 }
+  }
 }
 
 function grid2index(x, y, cols) { return (y * cols) + x }
