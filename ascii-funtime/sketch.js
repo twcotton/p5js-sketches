@@ -2,7 +2,9 @@ const density = " .:-=+*#%@";
 const charSize = 12;
 let cols, rows;
 let time = 0; // Used to animate the math
-let coords = new Set();
+let gridCoords = new Set();
+let griddedMouseX;
+let griddedMouseY;
 
 function setup() {
   createCanvas(600, 900);
@@ -12,6 +14,8 @@ function setup() {
 
   cols = floor(width / charSize);
   rows = floor(height / charSize);
+
+
   // We leave looping ON for this one to see the animation
 }
 
@@ -19,23 +23,31 @@ function draw() {
   background(10);
   fill(200, 200, 255);
 
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
+  let griddedMouseX = round(mouseX / width * cols)
+  let griddedMouseY = round(mouseY / height * rows)
+  // console.log(mouseX / width)
+  console.log(griddedMouseX)
 
-      // Calculate a procedural value using sine waves and time
-      // This creates overlapping wavy grids
-      let wave1 = sin(x * 0.2 + time);
-      let wave2 = cos(y * 0.2 + time);
-      let combined = wave1 * wave2;
+  text("x", griddedMouseX * charSize + charSize / 2, griddedMouseY * charSize + charSize / 2);
 
-      // combined is between -1 and 1. Map it to our density string index (0 to 9)
-      let charIndex = floor(map(combined, -1, 1, 0, density.length - 1));
+  // for (let y = 0; y < rows; y++) {
+  //   for (let x = 0; x < cols; x++) {
 
-      let charToDraw = density.charAt(charIndex);
+  //     let densityIndex = 1;
+  //     // if (y = griddedMouseY) {
+  //     //   if (x = griddedMouseX) {
+  //     //     densityIndex = 0.99;
+  //     //   }
+  //     // }
 
-      text(charToDraw, x * charSize + charSize / 2, y * charSize + charSize / 2);
-    }
-  }
+  //     // combined is between -1 and 1. Map it to our density string index (0 to 9)
+  //     let charIndex = floor(map(densityIndex, 0, 1, 0, density.length - 1));
+
+  //     let charToDraw = density.charAt(charIndex);
+
+  //     text(charToDraw, x * charSize + charSize / 2, y * charSize + charSize / 2);
+  //   }
+  // }
 
   let gridCoords = calculateCircle(32, 32, 12);
 
