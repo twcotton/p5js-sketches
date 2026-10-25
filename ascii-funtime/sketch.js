@@ -37,13 +37,16 @@ function draw() {
     asciiPixels[drawIndex].flicker()
   }
 
-  let gridCoords = calculateCircle(griddedMouseX, griddedMouseY, 12);
-  for (let i = 0; i < (gridCoords.length / 2); i++) {
-    let brushIndex = grid2index(gridCoords[i], gridCoords[i + 1], cols)
-    if (brushIndex >= 0) {
-      asciiPixels[brushIndex].flicker()
-    }
-  }
+  // let gridCoords = calculateCircle(griddedMouseX, griddedMouseY, 12);
+  // for (let i = 0; i < (gridCoords.length / 2); i++) {
+  //   let brushIndex = grid2index(gridCoords[i], gridCoords[i + 1], cols)
+  //   if (brushIndex >= 0) {
+  //     asciiPixels[brushIndex].flicker()
+  //   }
+  // }
+
+  asciiPixels[(frameCount * 2) % (cols * rows)].flicker()
+  asciiPixels[(frameCount * 2 + 1) % (cols * rows)].flicker()
 
   for (pixel of asciiPixels) {
     pixel.update()
@@ -64,11 +67,27 @@ class AsciiPixel {
     this.flickering = false;
     this.flickerIndex = -1;
     this.flickerString = " .:-=+*#%@#%*+=-:. "
+
+    this.flickerLength = 60; // in frames
+    // this.flickerFreq = 5;
+    this.flickerSlope = 1; // 1 is a special case linear
+    this.flickerFalloff = [];
+
+    this.calcFalloff();
   }
   // public
   setChar(char) {
     this.targetChar = char;
   }
+  setFlickerFalloff(
+    length,
+    slope
+  ) {
+    this.flickerLength = length;
+    this.flickerSlope = slope;
+    this.calcFalloff();
+  }
+
   flicker() {
     if (!this.flickering) {
       this.flickerIndex = 0
@@ -92,17 +111,41 @@ class AsciiPixel {
 
   // private
   flickerUpdate() {
+    // reset i think?
     if (this.flickerIndex > this.flickerString.length) {
-      this.flickerIndex = 0
-      this.flickering = false
-      // this.stopChanging()
+        this.flickerIndex = 0
+        this.flickering = false
+        // this.stopChanging()
 
-      this.char = this.targetChar
+        this.char = this.targetChar
     }
 
-    this.char = this.flickerString.charAt(this.flickerIndex)
+    if (frameCount % this.flickerFreq == 1) {
+      this.char = this.flickerString.charAt(this.flickerIndex)
+      this.flickerIndex++
+    }
+  }
 
-    this.flickerIndex++
+  calcFalloff() {
+    // reset old falloff
+    this.flickerFalloff = [];
+
+    let endValue = 0
+    let startValue = 1
+
+    for(let i = 0; i < this.flickerLength; i++) {
+      t = i / this.flickerLength;
+      factor = (1.0 - t) * this.flickerSlope;
+      value = endValue + (startValue - endValue) * factor
+
+      this.flickerFalloff[i] = value
+    }
+  }
+
+  calcFlickerPattern() {
+    for(let i = 0; i < this.flickerFalloff.length; i++) {
+
+    }
   }
 
   startChanging() { this.changing += 1 }
